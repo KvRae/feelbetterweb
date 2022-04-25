@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use CMEN\GoogleChartsBundle\GoogleCharts\Charts\PieChart;
 
 /**
  * @Route("/evenement")
@@ -24,7 +25,54 @@ class EvenementController extends AbstractController
             ->getRepository(Evenement::class)
             ->findAll();
 
+
+        $sp=0;
+        $pl=0;
+
+        foreach ($evenements as $ev)
+        {
+            if (  $ev->getNbrPlace()=="Place")  :
+
+                $sp+=1;
+            elseif ($ev->getParticipants()=="Participants") :
+
+                $pl+=1;
+
+            endif;
+
+        }
+
+        $pieChart = new PieChart();
+        $pieChart->getData()->setArrayToDataTable(
+            [['catf', 'catf'],
+                ['Nombres de place occupées',     $sp],
+                ['Nombres de places restantes',      $pl]
+            ]);
+        $pieChart->getOptions()->setColors(['#ffd700', '#C0C0C0']);
+        $pieChart->getOptions()->setHeight(500);
+        $pieChart->getOptions()->setWidth(900);
+        $pieChart->getOptions()->getTitleTextStyle()->setBold(true);
+        $pieChart->getOptions()->getTitleTextStyle()->setColor('#009900');
+        $pieChart->getOptions()->getTitleTextStyle()->setItalic(true);
+        $pieChart->getOptions()->getTitleTextStyle()->setFontName('Arial');
+        $pieChart->getOptions()->getTitleTextStyle()->setFontSize(20);
+
         return $this->render('evenement/index.html.twig', [
+            'evenements' => $evenements,'piechart' => $pieChart
+        ]);
+    }
+
+
+    /**
+     * @Route("/Events", name="app_evenement_index_front", methods={"GET"})
+     */
+    public function indexFront(EntityManagerInterface $entityManager): Response
+    {
+        $evenements = $entityManager
+            ->getRepository(Evenement::class)
+            ->findAll();
+
+        return $this->render('evenement/indexFront.html.twig', [
             'evenements' => $evenements,
         ]);
     }
